@@ -1,0 +1,8 @@
+[package]
+name = "ray_poker"
+version = "0.1.0"
+authors = ["mikko <mikko.lundgren@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+rand = "0.3.14"
