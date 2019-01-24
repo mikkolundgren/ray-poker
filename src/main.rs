@@ -1,14 +1,5 @@
 use rand::{Rng, StdRng};
 use std::io;
-use std::iter::FromIterator;
-
-#[derive(Copy, Clone, Debug)]
-enum Suit {
-    Diamond,
-    Heart,
-    Club,
-    Spade,
-}
 
 #[derive(Clone, Debug)]
 struct Card {
@@ -130,47 +121,93 @@ fn is_flush(hand: &Vec<Card>) -> bool {
         && (hand[0].suit == hand[4].suit)
 }
 
-fn check_hand(hand: &Vec<Card>) -> String {
-    let mut reply = String::from("no win");
-    if is_flush(hand) {
-        reply = String::from("flush!");
-    } else if is_two_pairs(hand) {
-        reply = String::from("two pairs");
-    } else if is_three_of_kind(hand) {
-        reply = String::from("three of kind");
+fn is_straight(hand: &Vec<Card>) -> bool {
+    let mut reply: bool = false;
+    if (hand[0].rank + 1 == hand[1].rank)
+        && (hand[1].rank + 1 == hand[2].rank)
+        && (hand[2].rank + 1 == hand[3].rank)
+        && (hand[3].rank + 1 == hand[4].rank)
+    {
+        reply = true;
+    }
+    if (hand[0].rank == 1 && hand[4].rank == 13)
+        && (hand[1].rank == 10)
+        && hand[2].rank == 11
+        && hand[3].rank == 12
+    {
+        reply = true;
     }
     reply
 }
 
-fn check_full_house(hand: &Vec<Card>) {}
+fn is_fullhouse(_hand: &Vec<Card>) -> bool {
+    false
+}
+
+fn is_royal_flush(_hand: &Vec<Card>) -> bool {
+    false
+}
+
+fn check_hand(hand: &Vec<Card>, bet: i32) -> i32 {
+    let mut win = -1;
+    if is_two_pairs(hand) {
+        win = bet * 2;
+        println!("Two pairs! Win {}", win);
+    } else if is_three_of_kind(hand) {
+        win = bet * 3;
+        println!("Three of a kind! Win {}", win);
+    } else if is_straight(hand) {
+        win = bet * 4;
+        println!("Straight! Win {}", win);
+    } else if is_flush(hand) {
+        win = bet * 5;
+        println!("Flush! Win {}", win);
+    } else if is_fullhouse(hand) {
+        win = bet * 8;
+        println!("Full house! Win {}", win);
+    } else if is_four_of_kind(hand) {
+        win = bet * 25;
+        println!("Four of a kind! Win {}", win);
+    } else if is_royal_flush(hand) {
+        win = bet * 50;
+        println!("Royal flush! Win {}", win);
+    } else {
+        println!("No win, sorry!");
+    }
+    win
+}
 
 fn main() {
-    let mut deck = Deck::init();
-    let mut hand = deal_cards(&mut deck, 5);
-    print_hand(&hand);
-    println!("Input cards you want to keep.");
-    let mut selection = String::new();
-    io::stdin().read_line(&mut selection).expect("failed.");
-    let selection = selection.trim();
-    let mut new_hand: Vec<Card> = Vec::new();
-    for c in selection.chars() {
-        // let mut i: u32 = c.to_digit(10).unwrap();
-        match c {
-            '1' => new_hand.push(Card::init(hand[0].rank, hand[0].suit)),
-            '2' => new_hand.push(Card::init(hand[1].rank, hand[1].suit)),
-            '3' => new_hand.push(Card::init(hand[2].rank, hand[2].suit)),
-            '4' => new_hand.push(Card::init(hand[3].rank, hand[3].suit)),
-            '5' => new_hand.push(Card::init(hand[4].rank, hand[4].suit)),
-            _ => panic!(),
+    let mut bank = 20;
+    while bank > 0 {
+        println!("Bank: {}", bank);
+        let mut deck = Deck::init();
+        let hand = deal_cards(&mut deck, 5);
+        print_hand(&hand);
+        println!("Input cards you want to keep.");
+        let mut selection = String::new();
+        io::stdin().read_line(&mut selection).expect("failed.");
+        let selection = selection.trim();
+        let mut new_hand: Vec<Card> = Vec::new();
+        for c in selection.chars() {
+            // let mut i: u32 = c.to_digit(10).unwrap();
+            match c {
+                '1' => new_hand.push(Card::init(hand[0].rank, hand[0].suit)),
+                '2' => new_hand.push(Card::init(hand[1].rank, hand[1].suit)),
+                '3' => new_hand.push(Card::init(hand[2].rank, hand[2].suit)),
+                '4' => new_hand.push(Card::init(hand[3].rank, hand[3].suit)),
+                '5' => new_hand.push(Card::init(hand[4].rank, hand[4].suit)),
+                _ => panic!(),
+            }
         }
+        let new_cards = deal_cards(&mut deck, 5 - selection.len());
+        for c in new_cards {
+            &new_hand.push(c);
+        }
+        new_hand.sort_by(|a, b| a.rank.cmp(&b.rank));
+        print_hand(&new_hand);
+        bank = bank + check_hand(&new_hand, 1);
     }
-    let new_cards = deal_cards(&mut deck, 5 - selection.len());
-    for c in new_cards {
-        &new_hand.push(c);
-    }
-    new_hand.sort_by(|a, b| a.rank.cmp(&b.rank));
-    print_hand(&new_hand);
-    println!("{}", check_hand(&new_hand));
 }
 
 #[cfg(test)]
@@ -202,5 +239,21 @@ mod tests {
             Card::init(2, 1),
         ];
         assert_eq!(is_four_of_kind(&cards), true);
+        let cards = vec![
+            Card::init(3, 1),
+            Card::init(4, 2),
+            Card::init(5, 3),
+            Card::init(6, 4),
+            Card::init(7, 1),
+        ];
+        assert_eq!(is_straight(&cards), true);
+        let cards = vec![
+            Card::init(1, 1),
+            Card::init(10, 2),
+            Card::init(11, 3),
+            Card::init(12, 4),
+            Card::init(13, 1),
+        ];
+        assert_eq!(is_straight(&cards), true);
     }
 }
