@@ -140,37 +140,59 @@ fn is_straight(hand: &Vec<Card>) -> bool {
     reply
 }
 
+fn is_pair(_hand: &Vec<Card>) -> bool {
+    if is_three_of_kind(_hand) || is_four_of_kind(_hand) || is_two_pairs(_hand) {
+        return false;
+    }
+    if (_hand[0].rank == _hand[1].rank)
+        || (_hand[1].rank == _hand[2].rank)
+        || (_hand[2].rank == _hand[3].rank)
+        || (_hand[3].rank == _hand[4].rank)
+    {
+        return true;
+    }
+    false
+}
+
 fn is_fullhouse(_hand: &Vec<Card>) -> bool {
+    if is_three_of_kind(_hand) {
+        if (_hand[0].rank == _hand[1].rank) && (_hand[0].rank != _hand[2].rank) {
+            return true;
+        }
+        if (_hand[3].rank == _hand[4].rank) && (_hand[2].rank != _hand[3].rank) {
+            return true;
+        }
+    }
     false
 }
 
 fn is_royal_flush(_hand: &Vec<Card>) -> bool {
-    false
+    (is_straight(_hand) && is_flush(_hand))
 }
 
 fn check_hand(hand: &Vec<Card>, bet: i32) -> i32 {
     let mut win = -1;
-    if is_two_pairs(hand) {
-        win = bet * 2;
-        println!("Two pairs! Win {}", win);
-    } else if is_three_of_kind(hand) {
-        win = bet * 3;
-        println!("Three of a kind! Win {}", win);
-    } else if is_straight(hand) {
-        win = bet * 4;
-        println!("Straight! Win {}", win);
-    } else if is_flush(hand) {
-        win = bet * 5;
-        println!("Flush! Win {}", win);
-    } else if is_fullhouse(hand) {
-        win = bet * 8;
-        println!("Full house! Win {}", win);
+    if is_royal_flush(hand) {
+        win = bet * 50;
+        println!("Royal flush! Win {}", win);
     } else if is_four_of_kind(hand) {
         win = bet * 25;
         println!("Four of a kind! Win {}", win);
-    } else if is_royal_flush(hand) {
-        win = bet * 50;
-        println!("Royal flush! Win {}", win);
+    } else if is_fullhouse(hand) {
+        win = bet * 8;
+        println!("Full house! Win {}", win);
+    } else if is_flush(hand) {
+        win = bet * 5;
+        println!("Flush! Win {}", win);
+    } else if is_straight(hand) {
+        win = bet * 4;
+        println!("Straight! Win {}", win);
+    } else if is_three_of_kind(hand) {
+        win = bet * 3;
+        println!("Three of a kind! Win {}", win);
+    } else if is_two_pairs(hand) {
+        win = bet * 2;
+        println!("Two pairs! Win {}", win);
     } else {
         println!("No win, sorry!");
     }
@@ -255,5 +277,40 @@ mod tests {
             Card::init(13, 1),
         ];
         assert_eq!(is_straight(&cards), true);
+        let cards = vec![
+            Card::init(1, 1),
+            Card::init(10, 2),
+            Card::init(11, 3),
+            Card::init(11, 4),
+            Card::init(13, 1),
+        ];
+        assert_eq!(is_pair(&cards), true);
+        assert_eq!(is_three_of_kind(&cards), false);
+        assert_eq!(is_four_of_kind(&cards), false);
+
+        let cards = vec![
+            Card::init(1, 1),
+            Card::init(10, 1),
+            Card::init(11, 1),
+            Card::init(12, 1),
+            Card::init(13, 1),
+        ];
+        assert_eq!(is_royal_flush(&cards), true);
+        let cards = vec![
+            Card::init(1, 1),
+            Card::init(1, 2),
+            Card::init(1, 3),
+            Card::init(5, 1),
+            Card::init(5, 2),
+        ];
+        assert_eq!(is_fullhouse(&cards), true);
+        let cards = vec![
+            Card::init(1, 1),
+            Card::init(1, 2),
+            Card::init(5, 1),
+            Card::init(5, 2),
+            Card::init(5, 3),
+        ];
+        assert_eq!(is_fullhouse(&cards), true);
     }
 }
